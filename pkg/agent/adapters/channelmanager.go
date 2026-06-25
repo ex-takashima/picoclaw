@@ -32,6 +32,10 @@ func (a *channelManagerAdapter) InvokeTypingStop(channel, chatID string) {
 	a.inner.InvokeTypingStop(channel, chatID)
 }
 
+func (a *channelManagerAdapter) InvokeTurnDone(channel, chatID, status string) {
+	a.inner.InvokeTurnDone(channel, chatID, status)
+}
+
 func (a *channelManagerAdapter) SendMessage(ctx context.Context, msg bus.OutboundMessage) error {
 	return a.inner.SendMessage(ctx, msg)
 }

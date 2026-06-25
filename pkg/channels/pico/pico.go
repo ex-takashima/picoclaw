@@ -486,6 +486,23 @@ func (c *PicoChannel) StartTyping(ctx context.Context, chatID string) (func(), e
 	}, nil
 }
 
+// SendTurnDone implements channels.TurnDoneCapable. It emits the explicit
+// turn.done terminal event for the session, signaling that the full agent turn
+// is complete. status is typically "ok" or "canceled". Must be sent after
+// typing.stop so the terminal event marks the true end of the turn lifecycle.
+func (c *PicoChannel) SendTurnDone(ctx context.Context, chatID, status string) error {
+	if !c.IsRunning() {
+		return channels.ErrNotRunning
+	}
+	if status == "" {
+		status = "ok"
+	}
+	doneMsg := newMessage(TypeTurnDone, map[string]any{
+		PayloadKeyStatus: status,
+	})
+	return c.broadcastToSession(chatID, doneMsg)
+}
+
 // SendPlaceholder implements channels.PlaceholderCapable.
 // It sends a placeholder message via the Pico Protocol that will later be
 // edited to the actual response via EditMessage (channels.MessageEditor).

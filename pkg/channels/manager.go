@@ -358,6 +358,31 @@ func (m *Manager) InvokeTypingStop(channel, chatID string) {
 	}
 }
 
+// InvokeTurnDone emits an explicit turn-completion event on channels that
+// implement TurnDoneCapable. It is safe to call for any channel: it is a no-op
+// when the channel is unknown or does not support the capability.
+// Callers MUST invoke this AFTER InvokeTypingStop so the terminal event marks
+// the true end of the turn lifecycle. status is typically "ok" or "canceled".
+func (m *Manager) InvokeTurnDone(channel, chatID, status string) {
+	m.mu.RLock()
+	ch, ok := m.channels[channel]
+	m.mu.RUnlock()
+	if !ok {
+		return
+	}
+	tc, ok := ch.(TurnDoneCapable)
+	if !ok {
+		return
+	}
+	if err := tc.SendTurnDone(context.Background(), chatID, status); err != nil {
+		logger.DebugCF("channels", "SendTurnDone failed", map[string]any{
+			"channel": channel,
+			"chat_id": chatID,
+			"error":   err.Error(),
+		})
+	}
+}
+
 // RecordReactionUndo registers a reaction undo function for later invocation.
 // Implements PlaceholderRecorder.
 func (m *Manager) RecordReactionUndo(channel, chatID string, undo func()) {

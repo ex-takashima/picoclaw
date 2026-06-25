@@ -268,7 +268,13 @@ func (al *AgentLoop) Run(ctx context.Context) error {
 				defer func() { <-al.workerSem }() // Release slot
 
 				if al.channelManager != nil {
-					defer al.channelManager.InvokeTypingStop(m.Channel, m.ChatID)
+					// Stop typing, then emit the explicit turn.done terminal
+					// event. Ordering matters: typing.stop must precede
+					// turn.done so clients can deterministically finalize.
+					defer func() {
+						al.channelManager.InvokeTypingStop(m.Channel, m.ChatID)
+						al.channelManager.InvokeTurnDone(m.Channel, m.ChatID, "ok")
+					}()
 				}
 
 				if al.takePendingStop(sessionKey) {

@@ -39,6 +39,11 @@ type ChannelManager interface {
 	// InvokeTypingStop signals that typing has stopped.
 	InvokeTypingStop(channel, chatID string)
 
+	// InvokeTurnDone emits an explicit turn-completion event on channels that
+	// support it. Must be called after InvokeTypingStop. status is typically
+	// "ok" or "canceled".
+	InvokeTurnDone(channel, chatID, status string)
+
 	// SendMessage sends a text message to the specified channel and chat.
 	SendMessage(ctx context.Context, msg bus.OutboundMessage) error
 

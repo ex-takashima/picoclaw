@@ -73,6 +73,8 @@ func (m *recordingChannelManager) GetEnabledChannels() []string {
 
 func (m *recordingChannelManager) InvokeTypingStop(channel, chatID string) {}
 
+func (m *recordingChannelManager) InvokeTurnDone(channel, chatID, status string) {}
+
 func (m *recordingChannelManager) SendMessage(ctx context.Context, msg bus.OutboundMessage) error {
 	return nil
 }

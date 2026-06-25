@@ -22,7 +22,15 @@ const (
 	TypeError         = "error"
 	TypePong          = "pong"
 
+	// TypeTurnDone is the explicit terminal event sent from server to client
+	// after the agent has fully finished processing an inbound message
+	// (including tool calls and final output). It is always emitted after
+	// typing.stop, so clients can deterministically finalize a run without
+	// racing late message.update events. See issue #2984.
+	TypeTurnDone = "turn.done"
+
 	PayloadKeyContent     = "content"
+	PayloadKeyStatus      = "status"
 	PayloadKeyThought     = "thought"
 	PayloadKeyKind        = "kind"
 	PayloadKeyPlaceholder = "placeholder"

@@ -11,7 +11,12 @@ import (
 
 func (al *AgentLoop) processMessageSync(ctx context.Context, msg bus.InboundMessage) {
 	if al.channelManager != nil {
-		defer al.channelManager.InvokeTypingStop(msg.Channel, msg.ChatID)
+		// Stop typing, then emit the explicit turn.done terminal event.
+		// Ordering matters: typing.stop must precede turn.done.
+		defer func() {
+			al.channelManager.InvokeTypingStop(msg.Channel, msg.ChatID)
+			al.channelManager.InvokeTurnDone(msg.Channel, msg.ChatID, "ok")
+		}()
 	}
 
 	response, err := al.processMessage(ctx, msg)

@@ -20,6 +20,15 @@ type MessageEditor interface {
 	EditMessage(ctx context.Context, chatID string, messageID string, content string) error
 }
 
+// TurnDoneCapable — channels that can emit an explicit terminal "turn done"
+// event after the agent has fully finished processing an inbound message
+// (including tool calls and final output). Implementations MUST emit it only
+// after any typing-stop signal, so external clients can deterministically
+// finalize a run. status is typically "ok" or "canceled".
+type TurnDoneCapable interface {
+	SendTurnDone(ctx context.Context, chatID string, status string) error
+}
+
 // MessageEditorWithPayload extends MessageEditor for channels that can update
 // structured message metadata in addition to plain text content.
 type MessageEditorWithPayload interface {
