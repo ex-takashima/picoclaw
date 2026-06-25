@@ -131,6 +131,71 @@ func TestDismissTrackedToolFeedbackMessage_DeletesProgressMessage(t *testing.T) 
 	}
 }
 
+func TestSendTurnDone_EmitsTurnDoneWithStatus(t *testing.T) {
+	ch := newTestPicoChannel(t)
+
+	if err := ch.Start(context.Background()); err != nil {
+		t.Fatalf("Start() error = %v", err)
+	}
+	defer ch.Stop(context.Background())
+
+	clientConn, received, cleanup := newTestPicoWebSocket(t)
+	defer cleanup()
+	ch.addConnForTest(&picoConn{id: "conn-1", conn: clientConn, sessionID: "sess-1"})
+
+	if err := ch.SendTurnDone(context.Background(), "pico:sess-1", "ok"); err != nil {
+		t.Fatalf("SendTurnDone() error = %v", err)
+	}
+
+	select {
+	case msg := <-received:
+		if msg.Type != TypeTurnDone {
+			t.Fatalf("type = %q, want %q", msg.Type, TypeTurnDone)
+		}
+		if msg.SessionID != "sess-1" {
+			t.Fatalf("session_id = %q, want sess-1", msg.SessionID)
+		}
+		if status, _ := msg.Payload[PayloadKeyStatus].(string); status != "ok" {
+			t.Fatalf("status = %q, want ok", status)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("expected a turn.done message to be broadcast")
+	}
+}
+
+func TestSendTurnDone_DefaultsStatusToOK(t *testing.T) {
+	ch := newTestPicoChannel(t)
+	if err := ch.Start(context.Background()); err != nil {
+		t.Fatalf("Start() error = %v", err)
+	}
+	defer ch.Stop(context.Background())
+
+	clientConn, received, cleanup := newTestPicoWebSocket(t)
+	defer cleanup()
+	ch.addConnForTest(&picoConn{id: "conn-1", conn: clientConn, sessionID: "sess-1"})
+
+	if err := ch.SendTurnDone(context.Background(), "pico:sess-1", ""); err != nil {
+		t.Fatalf("SendTurnDone() error = %v", err)
+	}
+
+	select {
+	case msg := <-received:
+		if status, _ := msg.Payload[PayloadKeyStatus].(string); status != "ok" {
+			t.Fatalf("status = %q, want ok (default)", status)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("expected a turn.done message to be broadcast")
+	}
+}
+
+func TestSendTurnDone_NotRunningReturnsError(t *testing.T) {
+	ch := newTestPicoChannel(t)
+	// Not started → IsRunning() is false.
+	if err := ch.SendTurnDone(context.Background(), "pico:sess-1", "ok"); err == nil {
+		t.Fatal("expected error when channel is not running")
+	}
+}
+
 func TestSend_ThoughtMessageDoesNotFinalizeTrackedToolFeedback(t *testing.T) {
 	ch := newTestPicoChannel(t)
 

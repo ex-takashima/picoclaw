@@ -64,6 +64,22 @@ func (m *mockChannel) EditMessage(ctx context.Context, chatID, messageID, conten
 	return nil
 }
 
+// mockTurnDoneChannel is a mockChannel that also implements TurnDoneCapable,
+// recording the turn.done invocations it receives.
+type mockTurnDoneChannel struct {
+	mockChannel
+	turnDoneCalls   int
+	lastTurnDoneCID string
+	lastTurnStatus  string
+}
+
+func (m *mockTurnDoneChannel) SendTurnDone(ctx context.Context, chatID, status string) error {
+	m.turnDoneCalls++
+	m.lastTurnDoneCID = chatID
+	m.lastTurnStatus = status
+	return nil
+}
+
 type mockMediaChannel struct {
 	mockChannel
 	sendMediaFn       func(ctx context.Context, msg bus.OutboundMediaMessage) ([]string, error)
@@ -2609,6 +2625,37 @@ func TestInvokeTypingStop_NoOpWhenNoEntry(t *testing.T) {
 	m := newTestManager()
 	// Should not panic
 	m.InvokeTypingStop("telegram", "nonexistent")
+}
+
+func TestInvokeTurnDone_CallsCapableChannel(t *testing.T) {
+	m := newTestManager()
+	ch := &mockTurnDoneChannel{}
+	m.channels["pico"] = ch
+
+	m.InvokeTurnDone("pico", "pico:sess-1", "ok")
+
+	if ch.turnDoneCalls != 1 {
+		t.Fatalf("expected SendTurnDone called once, got %d", ch.turnDoneCalls)
+	}
+	if ch.lastTurnDoneCID != "pico:sess-1" {
+		t.Fatalf("chatID = %q, want pico:sess-1", ch.lastTurnDoneCID)
+	}
+	if ch.lastTurnStatus != "ok" {
+		t.Fatalf("status = %q, want ok", ch.lastTurnStatus)
+	}
+}
+
+func TestInvokeTurnDone_NoOpForNonCapableChannel(t *testing.T) {
+	m := newTestManager()
+	m.channels["plain"] = &mockChannel{} // does not implement TurnDoneCapable
+	// Should not panic and simply do nothing.
+	m.InvokeTurnDone("plain", "chat123", "ok")
+}
+
+func TestInvokeTurnDone_NoOpForUnknownChannel(t *testing.T) {
+	m := newTestManager()
+	// Should not panic when the channel is not registered.
+	m.InvokeTurnDone("nonexistent", "chat123", "ok")
 }
 
 func TestInvokeTypingStop_Idempotent(t *testing.T) {
