@@ -585,7 +585,7 @@ Agent 读取 HEARTBEAT.md
 
 Provider 流式输出采用双开关，默认关闭。只有当前 channel 的 `settings.streaming.enabled` 和当前模型条目的 `streaming.enabled` 都为 `true`，并且 provider 与 channel 都支持流式能力时，Agent 才会尝试流式请求；任一条件不满足时仍使用普通非流式请求。
 
-当前完整落地的是 Pico WebUI。Pico 使用已有的 `message.create` 创建第一条 assistant 消息，随后用 `message.update` 更新同一条消息，不新增协议消息类型。
+当前完整落地的是 Pico WebUI。Pico 使用已有的 `message.create` 创建第一条 assistant 消息，随后用 `message.update` 更新同一条消息；streaming 本身不新增协议消息类型。与 streaming 无关，服务端会在每个 turn 完成后发送 `turn.done` 终止事件（带 `status` 负载，例如 `"ok"`），以便外部 Pico WebSocket 客户端无需与延迟的 `message.update` 竞争即可确定性地结束一次运行。
 
 不需要流式时请省略 `streaming` 配置块。省略表示关闭，不需要写 `"streaming": {"enabled": false}`。
 

@@ -793,7 +793,7 @@ Resolution rules:
 
 Provider streaming uses a double opt-in and is disabled by default. The agent only tries streaming when the current channel has `settings.streaming.enabled: true`, the active model entry has `streaming.enabled: true`, and both the provider and channel support streaming. If any condition is missing, PicoClaw uses the normal non-streaming request path.
 
-Pico WebUI is the first fully wired channel. Pico creates the first assistant message with the existing `message.create` wire message, then updates that same message with `message.update`; no new Pico wire message type is introduced.
+Pico WebUI is the first fully wired channel. Pico creates the first assistant message with the existing `message.create` wire message, then updates that same message with `message.update`; streaming itself introduces no new Pico wire message type. Independently of streaming, the server emits a `turn.done` terminal event (with a `status` payload, e.g. `"ok"`) after each turn completes, so external Pico WebSocket clients can deterministically finalize a run instead of racing late `message.update` events.
 
 Leave `streaming` unset when you do not want streaming. An omitted `streaming` block means disabled; you do not need to write `"streaming": {"enabled": false}`.
 

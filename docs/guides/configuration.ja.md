@@ -413,7 +413,7 @@ HEARTBEAT_OK を返信        ユーザーが直接結果を受信
 
 Provider ストリーミングは二重の opt-in 方式で、デフォルトでは無効です。現在の channel に `settings.streaming.enabled: true` があり、アクティブなモデルエントリに `streaming.enabled: true` があり、さらに provider と channel の両方がストリーミングをサポートしている場合にのみ、agent はストリーミングリクエストを試行します。いずれかの条件が欠ける場合、PicoClaw は通常の非ストリーミングリクエスト経路を使います。
 
-Pico WebUI が最初に完全対応した channel です。Pico は既存の `message.create` wire message で最初の assistant メッセージを作成し、その後 `message.update` で同じメッセージを更新します。新しい Pico wire message type は追加されません。
+Pico WebUI が最初に完全対応した channel です。Pico は既存の `message.create` wire message で最初の assistant メッセージを作成し、その後 `message.update` で同じメッセージを更新します。streaming 自体は新しい Pico wire message type を追加しません。streaming とは独立に、各 turn の完了後にサーバは `turn.done` 終端イベント（`status` payload 付き、例: `"ok"`）を送出するため、外部の Pico WebSocket クライアントは遅延した `message.update` と競合せず run を確定的に終了できます。
 
 ストリーミングを使わない場合は `streaming` を省略してください。`streaming` ブロックの省略は無効を意味するため、`"streaming": {"enabled": false}` を書く必要はありません。
 
