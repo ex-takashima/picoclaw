@@ -74,3 +74,13 @@ docker/data
 
 .omc/
 .worktrees/
+
+# Local agent working artifacts (not for VCS)
+codex/
+debate/
+skills/
+
+# Locally built release binaries
+picoclaw-linux-*
+picoclaw-darwin-*
+picoclaw-windows-*

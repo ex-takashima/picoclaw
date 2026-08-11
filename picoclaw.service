@@ -1,0 +1,34 @@
+[Unit]
+Description=PicoClaw Gateway - Personal AI Assistant
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=picoclaw
+Group=picoclaw
+
+ExecStart=/usr/local/bin/picoclaw gateway
+WorkingDirectory=/home/picoclaw
+
+Restart=on-failure
+RestartSec=5
+StartLimitBurst=5
+StartLimitIntervalSec=60
+
+Environment=HOME=/home/picoclaw
+EnvironmentFile=-/home/picoclaw/.picoclaw/env
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=picoclaw
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/picoclaw/.picoclaw/workspace
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
